@@ -49,6 +49,7 @@
         </swiper>
       </div>
       <span class="model__author">Создано пользователем {{ model.author.name }}</span>
+      <span v-if="model.model.keywords && model.model.keywords.trim()" class="model__keywords">Ключевые слова: {{ formatKeywords(model.model.keywords) }}</span>
       <span class="model__data">Загружено {{ toDateString(model.model.created_at) }}</span>
     </div>
     <div class="model__panel">
@@ -87,6 +88,14 @@ export default {
   methods: {
     toDateString(date) {
       return new Date(date).toLocaleDateString('ru-RU', { year: 'numeric', month: 'numeric', day: 'numeric' })
+    },
+    formatKeywords(keywords) {
+      if (!keywords) return '';
+      // Преобразуем ключевые слова в формат #ключевое_слово
+      return keywords.split(' ').filter(k => k.trim()).map(k => {
+        const trimmed = k.trim();
+        return trimmed.startsWith('#') ? trimmed : '#' + trimmed;
+      }).join(' ');
     },
     getOrigin() {
       return window.location.origin;

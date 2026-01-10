@@ -13,6 +13,7 @@ type Model struct {
 	UserID      uint64    `json:"user_id"`
 	Title       string    `json:"title"`
 	Description string    `json:"description"`
+	Keywords    string    `json:"keywords"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 }
@@ -20,6 +21,7 @@ type Model struct {
 type ModelRequest struct {
 	Title       string   `json:"title"`
 	Description string   `json:"description"`
+	Keywords    string   `json:"keywords"`
 	FilesId     []uint64 `json:"files_id"`
 }
 
@@ -33,18 +35,21 @@ func (modelReq *ModelRequest) NewModel() *Model {
 	return &Model{
 		Title:       modelReq.Title,
 		Description: modelReq.Description,
+		Keywords:    modelReq.Keywords,
 	}
 }
 
 func (m *Model) BeforeUpdate() {
 	m.Title = html.EscapeString(strings.TrimSpace(m.Title))
 	m.Description = html.EscapeString(strings.TrimSpace(m.Description))
+	m.Keywords = html.EscapeString(strings.TrimSpace(m.Keywords))
 	m.UpdatedAt = time.Now()
 }
 
 func (m *Model) Prepare() {
 	m.Title = html.EscapeString(strings.TrimSpace(m.Title))
 	m.Description = html.EscapeString(strings.TrimSpace(m.Description))
+	m.Keywords = html.EscapeString(strings.TrimSpace(m.Keywords))
 	m.CreatedAt = time.Now()
 	m.UpdatedAt = time.Now()
 }

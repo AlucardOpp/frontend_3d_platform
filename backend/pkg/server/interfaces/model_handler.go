@@ -151,16 +151,27 @@ func (m *Model) UpdateModel(c *gin.Context) {
 		return
 	}
 
-	if len(modelReq.Title) == 0 && len(modelReq.Description) == 0 {
+	if len(modelReq.Title) == 0 && len(modelReq.Description) == 0 && len(modelReq.Keywords) == 0 {
 		c.JSON(http.StatusOK, updatableModel)
 		return
 	}
 
-	if len(modelReq.Title) != 0 {
+	hasTitle := len(modelReq.Title) != 0
+	hasDescription := len(modelReq.Description) != 0
+	hasKeywords := len(modelReq.Keywords) != 0
+
+	if hasTitle {
 		updatableModel.Title = modelReq.Title
 	}
-	if len(modelReq.Description) != 0 {
+	if hasDescription {
 		updatableModel.Description = modelReq.Description
+	}
+	// Обновляем keywords, если:
+	// 1. Поле keywords явно указано в запросе (не пустое)
+	// 2. ИЛИ если обновляются другие поля (title или description) - это позволяет очистить keywords
+	// Frontend всегда отправляет keywords в запросе при обновлении модели
+	if hasKeywords || hasTitle || hasDescription {
+		updatableModel.Keywords = modelReq.Keywords
 	}
 
 	updatableModel.BeforeUpdate()
@@ -185,6 +196,7 @@ func (m *Model) UpdateModel(c *gin.Context) {
 //	@Param		_page	query	int	false	"Query page param"
 //	@Param		_limit	query	int	false	"Query limit param"
 //	@Param		user_id	query	int	false	"Query user ID param"
+//	@Param		keywords	query	string	false	"Query keywords param (comma-separated)"
 //	@Success	201		{Array}	[]entities.ModelData
 //	@Failure	400		string	string
 //	@Failure	401		string	string
@@ -198,9 +210,11 @@ func (m *Model) GetModelList(c *gin.Context) {
 
 	userID, _ := strconv.ParseUint(c.Query("user_id"), 10, 64)
 
+	keywords := c.Query("keywords")
+
 	var readyModels []entities.ModelData
 
-	rawModels, err := m.modelApp.GetAllModels(page, limit, userID)
+	rawModels, err := m.modelApp.GetAllModels(page, limit, userID, keywords)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, fmt.Sprintf(constants.Failed, err))
 		return

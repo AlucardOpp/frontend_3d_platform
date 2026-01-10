@@ -1,7 +1,8 @@
 <template>
   <section class="models">
+      <filter-button @filter-changed="handleFilterChange" />
       <models-list
-        :models="models"
+        :models="filteredModels"
         @remove="removeModel"
         v-if="!isModelsLoading"
       />
@@ -13,9 +14,11 @@
 <script>
 import {mapState, mapGetters, mapActions, mapMutations} from 'vuex';
 import axios from "axios";
+import FilterButton from "@/components/FilterButton.vue";
 
 export default {
   components: {
+    FilterButton
   },
   data() {
     return {
@@ -30,6 +33,11 @@ export default {
       fetchModels: 'models/fetchModels',
       setPagesToOne: 'models/setPagesToOne',
     }),
+    handleFilterChange(keywords) {
+      this.$store.commit('models/setSelectedKeywords', keywords);
+      this.setPagesToOne();
+      this.fetchModels();
+    },
     removeModel(model){
       const accessToken = $cookies.get("access_token");
       const modelId = model.model.id;
@@ -71,6 +79,9 @@ export default {
       limit: state => state.models.limit,
       totalPages: state => state.models.totalPages,
     }),
+    filteredModels() {
+      return this.models;
+    }
   },
 }
 </script>

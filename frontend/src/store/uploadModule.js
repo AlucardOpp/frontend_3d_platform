@@ -4,7 +4,8 @@ import VueCookies from 'vue-cookies';
 export const uploadModule = {
     state: () => ({
         name: '',
-        description: ''
+        description: '',
+        keywords: ''
     }),
     mutations: {
       setName(state, name) {
@@ -12,6 +13,9 @@ export const uploadModule = {
       },
       setDescription(state, description) {
         state.description = description;
+      },
+      setKeywords(state, keywords) {
+        state.keywords = keywords;
       },
     },
     getters: { 

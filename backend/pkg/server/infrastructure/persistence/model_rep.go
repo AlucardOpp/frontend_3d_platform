@@ -46,7 +46,7 @@ func (r *ModelRepo) GetModel(id uint64) (*entities.Model, error) {
 	return model, nil
 }
 
-func (r *ModelRepo) GetAllModels(page, limit int, userID uint64) ([]entities.Model, error) {
+func (r *ModelRepo) GetAllModels(page, limit int, userID uint64, keywords string) ([]entities.Model, error) {
 	var models []entities.Model
 	var err error
 
@@ -62,6 +62,22 @@ func (r *ModelRepo) GetAllModels(page, limit int, userID uint64) ([]entities.Mod
 	dbRes := r.db.Debug().Table("model").Limit(limit).Offset(offset).Order("created_at desc")
 	if userID != 0 {
 		dbRes = dbRes.Where("user_id = ?", userID)
+	}
+	if keywords != "" {
+		// Фильтрация по keywords: ищем модели, у которых keywords содержит хотя бы одно из указанных ключевых слов
+		keywordList := strings.Split(keywords, ",")
+		var conditions []string
+		var args []interface{}
+		for _, keyword := range keywordList {
+			keyword = strings.TrimSpace(keyword)
+			if keyword != "" {
+				conditions = append(conditions, "keywords LIKE ?")
+				args = append(args, "%"+keyword+"%")
+			}
+		}
+		if len(conditions) > 0 {
+			dbRes = dbRes.Where(strings.Join(conditions, " OR "), args...)
+		}
 	}
 	err = dbRes.Find(&models).Error
 

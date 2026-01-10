@@ -55,6 +55,7 @@
 
   &__author,
   &__data,
+  &__keywords,
   &__comment-author {
     display: block;
     color: $color-regent-grey;
@@ -65,6 +66,10 @@
   }
 
   &__author {
+    margin-bottom: 5px;
+  }
+
+  &__keywords {
     margin-bottom: 5px;
   }
 

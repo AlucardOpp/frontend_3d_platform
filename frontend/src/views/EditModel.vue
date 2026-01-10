@@ -19,6 +19,12 @@
           <CustomTextarea :model-value="description" @update:model-value="setDescription" class="form__input" id="MODEL_DESCRIPTION" name="MODEL_DESCRIPTION" placeholder="Новое описание модели"/>
         </div>
       </div>
+      <div class="form__container form__container--one">
+        <div class="form__input-container input --grey">
+          <label for="MODEL_KEYWORDS" class="form__label">Ключевые слова:</label>
+          <CustomInput :model-value="keywords" @update:model-value="setKeywords" class="form__input" type="text" id="MODEL_KEYWORDS" name="MODEL_KEYWORDS" placeholder="Введите ключевые слова: #история #архитектура"/>
+        </div>
+      </div>
       <EditFiles :model="model" @onChange='onSaved'/>
       <button type="submit" @click="submitFilesHandler" class="form__button btn">Обновить модель</button>
     </form>
@@ -54,6 +60,7 @@ export default {
     ...mapMutations({
       setName: 'upload/setName',
       setDescription: 'upload/setDescription',
+      setKeywords: 'upload/setKeywords',
     }),
     onSaved (data) {
       this.files_id = data;
@@ -71,9 +78,11 @@ export default {
 
       const title = this.name;
       const description = this.description;
+      const keywords = this.keywords;
       const data = {
         description: description,
         title: title,
+        keywords: keywords,
       }
 
       const submitFilesFunc = (model_id, access) => {
@@ -90,6 +99,7 @@ export default {
           form.reset();
           this.$store.commit('upload/setName', '');
           this.$store.commit('upload/setDescription', '');
+          this.$store.commit('upload/setKeywords', '');
           const modal = document.querySelector('.modal');
           modal.classList.add('modal--active');
           setTimeout(() => {
@@ -131,6 +141,7 @@ export default {
         this.model = response.data;
         this.$store.commit('upload/setName', this.model.model.title);
         this.$store.commit('upload/setDescription', this.model.model.description);
+        this.$store.commit('upload/setKeywords', this.model.model.keywords || '');
       })
       .catch(error => {
         console.log(error);
@@ -142,6 +153,7 @@ export default {
     ...mapState({
       name: state => state.upload.name,
       description: state => state.upload.description,
+      keywords: state => state.upload.keywords,
     }),
   },
   mounted() {
