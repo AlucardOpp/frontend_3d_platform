@@ -92,7 +92,13 @@ func (r *ModelRepo) GetAllModels(page, limit int, userID uint64, keywords string
 }
 
 func (r *ModelRepo) UpdateModel(model *entities.Model) (*entities.Model, error) {
-	err := r.db.Debug().Table("model").Save(&model).Error
+	// Используем Updates с явным указанием полей, чтобы гарантировать обновление пустых строк
+	err := r.db.Debug().Table("model").Where("id = ?", model.ID).Updates(map[string]interface{}{
+		"title":       model.Title,
+		"description": model.Description,
+		"keywords":    model.Keywords,
+		"updated_at":  model.UpdatedAt,
+	}).Error
 	if err != nil {
 		if strings.Contains(err.Error(), "duplicate") || strings.Contains(err.Error(), "Duplicate") {
 			return nil, err
@@ -100,7 +106,13 @@ func (r *ModelRepo) UpdateModel(model *entities.Model) (*entities.Model, error) 
 		return nil, err
 	}
 
-	return model, nil
+	// Получаем обновленную модель из базы данных
+	updatedModel, err := r.GetModel(model.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return updatedModel, nil
 }
 
 func (r *ModelRepo) DeleteModel(id uint64) error {

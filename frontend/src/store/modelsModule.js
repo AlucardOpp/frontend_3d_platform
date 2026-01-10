@@ -8,6 +8,7 @@ export const modelsModule = {
         isModelsLoading: false,
         page: 1,
         limit: 1,
+        selectedKeywords: [],
     }),
     mutations: {
         setModels(state, models) {
@@ -22,31 +23,27 @@ export const modelsModule = {
         setPage(state, page) { 
             state.page = page;
         },
+        setSelectedKeywords(state, keywords) {
+            state.selectedKeywords = keywords;
+        },
     },
     actions: {
         async fetchModels({state, commit}) {
             try {
                 commit('setLoading', true);
-                if (state.userId === null) {
-                    const response = await axios.get('/api/model', {
-                        params: {
-                            _page: state.page,
-                            _limit: state.limit
-                        }
-                    });
-                    const models = Array.isArray(response.data) ? response.data : [];
-                    commit('setModels', models)
-                } else {
-                    const response = await axios.get('/api/model', {
-                        params: {
-                            _page: state.page,
-                            _limit: state.limit,
-                            user_id: state.userId
-                        }
-                    });
-                    const models = Array.isArray(response.data) ? response.data : [];
-                    commit('setModels', models)
+                const params = {
+                    _page: state.page,
+                    _limit: state.limit
+                };
+                if (state.userId !== null) {
+                    params.user_id = state.userId;
                 }
+                if (state.selectedKeywords && state.selectedKeywords.length > 0) {
+                    params.keywords = state.selectedKeywords.join(',');
+                }
+                const response = await axios.get('/api/model', { params });
+                const models = Array.isArray(response.data) ? response.data : [];
+                commit('setModels', models)
             } catch (e) {
                 console.log(e);
             } finally {
@@ -56,26 +53,19 @@ export const modelsModule = {
         async loadMoreModels({state, commit}) {
             try {
                 commit('setPage', state.page + 1)
-                if (state.userId === null) {
-                    const response = await axios.get('/api/model', {
-                        params: {
-                            _page: state.page,
-                            _limit: state.limit
-                        }
-                    });
-                    const newModels = Array.isArray(response.data) ? response.data : [];
-                    commit('setModels', [...state.models, ...newModels]);
-                } else {
-                    const response = await axios.get('/api/model', {
-                        params: {
-                            _page: state.page,
-                            _limit: state.limit,
-                            user_id: state.userId
-                        }
-                    });
-                    const newModels = Array.isArray(response.data) ? response.data : [];
-                    commit('setModels', [...state.models, ...newModels]);
+                const params = {
+                    _page: state.page,
+                    _limit: state.limit
+                };
+                if (state.userId !== null) {
+                    params.user_id = state.userId;
                 }
+                if (state.selectedKeywords && state.selectedKeywords.length > 0) {
+                    params.keywords = state.selectedKeywords.join(',');
+                }
+                const response = await axios.get('/api/model', { params });
+                const newModels = Array.isArray(response.data) ? response.data : [];
+                commit('setModels', [...state.models, ...newModels]);
             } catch (e) {
                 console.log(e)
             }

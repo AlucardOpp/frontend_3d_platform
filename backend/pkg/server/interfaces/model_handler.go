@@ -151,14 +151,15 @@ func (m *Model) UpdateModel(c *gin.Context) {
 		return
 	}
 
-	if len(modelReq.Title) == 0 && len(modelReq.Description) == 0 && len(modelReq.Keywords) == 0 {
-		c.JSON(http.StatusOK, updatableModel)
-		return
-	}
-
 	hasTitle := len(modelReq.Title) != 0
 	hasDescription := len(modelReq.Description) != 0
 	hasKeywords := len(modelReq.Keywords) != 0
+
+	// Если все поля пустые, возвращаем модель без изменений
+	if !hasTitle && !hasDescription && !hasKeywords {
+		c.JSON(http.StatusOK, updatableModel)
+		return
+	}
 
 	if hasTitle {
 		updatableModel.Title = modelReq.Title
@@ -166,8 +167,8 @@ func (m *Model) UpdateModel(c *gin.Context) {
 	if hasDescription {
 		updatableModel.Description = modelReq.Description
 	}
-	// Обновляем keywords, если:
-	// 1. Поле keywords явно указано в запросе (не пустое)
+	// Обновляем keywords в следующих случаях:
+	// 1. Если keywords не пустые (пользователь хочет их изменить)
 	// 2. ИЛИ если обновляются другие поля (title или description) - это позволяет очистить keywords
 	// Frontend всегда отправляет keywords в запросе при обновлении модели
 	if hasKeywords || hasTitle || hasDescription {

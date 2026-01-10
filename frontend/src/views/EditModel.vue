@@ -78,7 +78,8 @@ export default {
 
       const title = this.name;
       const description = this.description;
-      const keywords = this.keywords;
+      // Гарантируем, что keywords всегда строка (даже если пустая)
+      const keywords = this.keywords !== undefined && this.keywords !== null ? this.keywords : '';
       const data = {
         description: description,
         title: title,
