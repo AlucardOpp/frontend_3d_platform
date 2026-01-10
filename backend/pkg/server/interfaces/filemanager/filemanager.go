@@ -5,6 +5,7 @@ import (
 	"mime/multipart"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/AhEhIOhYou/etomne/pkg/server/infrastructure/security"
 )
@@ -26,6 +27,9 @@ func (fu *fileManager) UploadFile(file *multipart.FileHeader) (string, error) {
 	newFileName := security.CreateName(file.Filename)
 	fileExtension := filepath.Ext(file.Filename)
 	uploadDir := os.Getenv("UPLOAD_DIR")
+	if uploadDir == "" {
+		uploadDir = "./upload"
+	}
 	if _, err := os.Stat(uploadDir); os.IsNotExist(err) {
     		os.MkdirAll(uploadDir, os.ModePerm)
     	}
@@ -44,12 +48,26 @@ func (fu *fileManager) UploadFile(file *multipart.FileHeader) (string, error) {
 	defer out.Close()
 
 	_, err = io.Copy(out, src)
+	if err != nil {
+		return "", err
+	}
 
-	return path, nil
+	webPath := "/upload/" + newFileName + fileExtension
+	return webPath, nil
 }
 
 func (fu *fileManager) DeleteFile(path string) error {
-	err := os.Remove(path)
+	filePath := path
+	if strings.HasPrefix(path, "/upload/") {
+		uploadDir := os.Getenv("UPLOAD_DIR")
+		if uploadDir == "" {
+			uploadDir = "./upload"
+		}
+		fileName := strings.TrimPrefix(path, "/upload/")
+		filePath = uploadDir + "/" + fileName
+	}
+	
+	err := os.Remove(filePath)
 	if err != nil {
 		return err
 	}

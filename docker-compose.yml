@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   frontend:
     container_name: model3d-frontend
@@ -20,6 +18,10 @@ services:
       - ./upload/:/usr/src/app/upload/
     env_file:
       - .env
+    environment:
+      - UPLOAD_DIR=/usr/src/app/upload
+    ports:
+      - "8095:8080"
     depends_on:
       - redis
       - postgres

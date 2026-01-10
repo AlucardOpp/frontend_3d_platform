@@ -34,7 +34,8 @@ export const modelsModule = {
                             _limit: state.limit
                         }
                     });
-                    commit('setModels', response.data)
+                    const models = Array.isArray(response.data) ? response.data : [];
+                    commit('setModels', models)
                 } else {
                     const response = await axios.get('/api/model', {
                         params: {
@@ -43,7 +44,8 @@ export const modelsModule = {
                             user_id: state.userId
                         }
                     });
-                    commit('setModels', response.data)
+                    const models = Array.isArray(response.data) ? response.data : [];
+                    commit('setModels', models)
                 }
             } catch (e) {
                 console.log(e);
@@ -61,7 +63,8 @@ export const modelsModule = {
                             _limit: state.limit
                         }
                     });
-                    commit('setModels', [...state.models, ...response.data]);
+                    const newModels = Array.isArray(response.data) ? response.data : [];
+                    commit('setModels', [...state.models, ...newModels]);
                 } else {
                     const response = await axios.get('/api/model', {
                         params: {
@@ -70,7 +73,8 @@ export const modelsModule = {
                             user_id: state.userId
                         }
                     });
-                    commit('setModels', [...state.models, ...response.data]);
+                    const newModels = Array.isArray(response.data) ? response.data : [];
+                    commit('setModels', [...state.models, ...newModels]);
                 }
             } catch (e) {
                 console.log(e)
