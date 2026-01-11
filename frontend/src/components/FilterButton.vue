@@ -57,7 +57,6 @@ export default {
 .filter-container {
   position: relative;
   display: inline-block;
-  margin-bottom: 20px;
 }
 
 .filter-button {
