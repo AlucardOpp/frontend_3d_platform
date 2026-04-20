@@ -24,6 +24,11 @@ export default {
       this.$store.commit('models/setUserId', null);
       this.$store.commit('upload/setName', '');
       this.$store.commit('upload/setDescription', '');
+      const clearAuthState = () => {
+        localStorage.removeItem('name');
+        localStorage.removeItem('id');
+        localStorage.setItem('isAuth', false);
+      };
       const isAccessTokenExist = $cookies.isKey('access_token');
       const isRefreshTokenExit = $cookies.isKey('refresh_token');
       if (!isAccessTokenExist && isRefreshTokenExit) {
@@ -34,20 +39,20 @@ export default {
         .then(response => {
           $cookies.set('access_token', response.data.tokens.access_token, '15min', '/');
           $cookies.set('refresh_token', response.data.tokens.refresh_token, '7d', '/');
-          commit('setId', `${response.data.public_data.id}`);
-          commit('setName', `${response.data.public_data.name}`);
+          this.$store.commit('models/setUserId', Number(response.data.public_data.id));
           localStorage.setItem('name', response.data.public_data.name);
           localStorage.setItem('id', response.data.public_data.id);
-          localStorage.setItem('isAuth', false);
+          localStorage.setItem('isAuth', true);
         })
         .catch(error => {
           console.log(error);
+          clearAuthState();
         });
       } else {
-        if (localStorage.name) {
+        if (isAccessTokenExist && localStorage.name) {
           localStorage.setItem('isAuth', true);
         } else {
-          localStorage.setItem('isAuth', false);
+          clearAuthState();
         }
       }
     }

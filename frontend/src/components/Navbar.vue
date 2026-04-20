@@ -37,6 +37,14 @@ export default {
     logout() {
       const accessToken = $cookies.get("access_token");
       const refreshToken = $cookies.get("refresh_token");
+      const clearSession = () => {
+        $cookies.remove("access_token");
+        $cookies.remove("refresh_token");
+        localStorage.removeItem('name');
+        localStorage.removeItem('id');
+        localStorage.setItem('isAuth', false);
+        window.location.href = '/authorization';
+      };
 
       const logoutFunc = (access) => {
         axios.get("/api/users/logout/", {
@@ -44,16 +52,17 @@ export default {
             "Authorization": `Bearer ${access}`
           }
         })
-          .then(res => {
-            $cookies.remove("access_token");
-            $cookies.remove("refresh_token");
-            localStorage.removeItem('name');
-            localStorage.removeItem('id');
-            localStorage.setItem('isAuth', false);
-            window.location.href = '/authorization';
+          .then(() => {
+            clearSession();
           })
           .catch(error => {
-            console.log(error)
+            // If token is already expired/invalid, backend can return 401.
+            // In this case we still need to clear client session and log out.
+            if (error?.response?.status === 401) {
+              clearSession();
+              return;
+            }
+            console.log(error);
           });
       };
 
@@ -68,9 +77,13 @@ export default {
             logoutFunc(response.data.tokens.access_token);
           })
           .catch(error => {
-            console.log(error);
+            clearSession();
           });
       } else {
+        if (!accessToken) {
+          clearSession();
+          return;
+        }
         logoutFunc(accessToken);
       }
     },
