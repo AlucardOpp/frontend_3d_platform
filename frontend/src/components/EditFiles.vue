@@ -11,7 +11,7 @@
         id="defaultFileInput"
         class="hidden-input"
         ref="defaultFile"
-        accept="image/*, video/*, .glb, .gltf"
+        :accept="modelAccept"
       />
 
       <div v-if="defaultFiles.length" class="preview-container mt-4">
@@ -50,7 +50,7 @@
         class="hidden-input"
         @change="onChange"
         ref="file"
-        accept="image/*, video/*, .glb, .gltf"
+        :accept="modelAccept"
       />
 
       <label for="fileInput" class="file-label">
@@ -82,6 +82,8 @@
 
 <script>
 import axios from "axios";
+import { MODEL_ACCEPT_ATTRIBUTE } from "@/utils/model3dFormats";
+import { prepareModelFileForUpload } from "@/utils/prepareModelFileForUpload";
 
 export default {
   data() {
@@ -91,6 +93,7 @@ export default {
       defaultFilesId: [],
       files: [],
       files_id: [],
+      modelAccept: MODEL_ACCEPT_ATTRIBUTE,
     };
   },
   props: ['model'],
@@ -115,7 +118,7 @@ export default {
     checkImages(str) {
       return (/\.(jpeg|jpg|png)$/i).test(str);
     },
-    onChange() {
+    async onChange() {
       const accessToken = $cookies.get("access_token");
       const refreshToken = $cookies.get("refresh_token");
       const modelId = this.model.model.id;
@@ -124,45 +127,49 @@ export default {
         files_id: this.files_id
       })
 
-      const saveFile = (file, access) => {
-        let fileData = new FormData();  
-        fileData.append('file', file);
-        
-        axios.post(`api/model/addfile/${modelId}`,
-          fileData,
-          {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-              'Authorization': `Bearer ${access}`
+      const saveFile = async (file, access) => {
+        try {
+          const fileToUpload = await prepareModelFileForUpload(file);
+          const fileData = new FormData();
+          fileData.append('file', fileToUpload);
+
+          const response = await axios.post(`api/model/addfile/${modelId}`,
+            fileData,
+            {
+              headers: {
+                'Content-Type': 'multipart/form-data',
+                'Authorization': `Bearer ${access}`
+              }
             }
-          }
-        ).then(response => {
-            this.files_id.push(response.data.id);
-          })
-          .catch(error => {
-            console.log(error);
-          });
+          );
+          this.files_id.push(response.data.id);
+        } catch (error) {
+          console.log(error);
+        }
+      };
+
+      const uploadAll = async (access) => {
+        for (let i = 0; i < this.files.length; i++) {
+          await saveFile(this.files[i], access);
+        }
       };
 
       if (accessToken === null && refreshToken) {
         axios.post('/api/users/refresh', {
           refresh_token: refreshToken
         })
-          .then(response => {
-            $cookies.set('access_token', response.data.tokens.access_token, '15min', '/');
+          .then(async (response) => {
+            const access = response.data.tokens.access_token;
+            $cookies.set('access_token', access, '15min', '/');
             $cookies.set('refresh_token', response.data.tokens.refresh_token, '7d', '/');
             localStorage.setItem('isAuth', true);
-            for (let i = 0; i < this.files.length; i++) {
-              saveFile(this.files[i], accessToken);
-            }
+            await uploadAll(access);
           })
           .catch(error => {
             console.log(error);
           });
       } else {
-        for (let i = 0; i < this.files.length; i++) {
-          saveFile(this.files[i], accessToken);
-        }
+        await uploadAll(accessToken);
       }
     },
 
