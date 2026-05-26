@@ -1,5 +1,11 @@
 <template>
   <section class="models">
+      <input
+        v-model="searchQuery"
+        type="search"
+        class="models__search"
+        placeholder="Введите название модели"
+      />
       <div class="models__controls">
         <filter-button @filter-changed="handleFilterChange" />
         <div class="sort-select-wrapper">
@@ -36,7 +42,8 @@ export default {
   },
   data() {
     return {
-      sortType: 'newest'
+      sortType: 'newest',
+      searchQuery: '',
     }
   },
   methods: {
@@ -97,7 +104,14 @@ export default {
       totalPages: state => state.models.totalPages,
     }),
     filteredModels() {
-      return this.models;
+      const query = this.searchQuery.trim().toLowerCase();
+      if (!query) {
+        return this.models;
+      }
+      return this.models.filter((model) => {
+        const title = (model.model.title || '').toLowerCase();
+        return title.includes(query);
+      });
     },
     sortedModels() {
       const models = [...this.filteredModels];
@@ -136,6 +150,29 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.models__search {
+  display: block;
+  width: 100%;
+  margin-bottom: 15px;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  font-size: 16px;
+  line-height: 1;
+  color: inherit;
+  background: #fff;
+
+  &::placeholder {
+    color: currentColor;
+    opacity: 0.5;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: #007bff;
+  }
+}
+
 .models__controls {
   display: flex;
   align-items: center;
