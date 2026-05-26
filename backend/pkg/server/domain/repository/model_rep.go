@@ -9,6 +9,7 @@ type ModelRepository interface {
 	GetModel(uint64) (*entities.Model, error)
 	GetAllModels(int, int, uint64, string) ([]entities.Model, error)
 	UpdateModel(*entities.Model) (*entities.Model, error)
+	UpdateFullDescriptionFileID(uint64, *uint64) error
 	DeleteModel(uint64) error
 
 	GetFilesByModel(uint64) ([]entities.File, error)

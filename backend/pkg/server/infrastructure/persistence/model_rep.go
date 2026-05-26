@@ -115,6 +115,10 @@ func (r *ModelRepo) UpdateModel(model *entities.Model) (*entities.Model, error) 
 	return updatedModel, nil
 }
 
+func (r *ModelRepo) UpdateFullDescriptionFileID(modelID uint64, fileID *uint64) error {
+	return r.db.Debug().Table("model").Where("id = ?", modelID).Update("full_description_file_id", fileID).Error
+}
+
 func (r *ModelRepo) DeleteModel(id uint64) error {
 	var model entities.Model
 	err := r.db.Debug().Table("model").Where("id = ?", id).Delete(&model).Error

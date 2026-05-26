@@ -88,10 +88,29 @@ func (m *Model) SaveModel(c *gin.Context) {
 	}
 
 	for _, id := range modelReq.FilesId {
+		if modelReq.FullDescriptionFileId != nil && id == *modelReq.FullDescriptionFileId {
+			continue
+		}
 		err = m.modelApp.AddFileToModel(id, savedModel.ID)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, fmt.Sprintf(constants.Failed, err))
+			return
 		}
+	}
+
+	if modelReq.FullDescriptionFileId != nil && *modelReq.FullDescriptionFileId > 0 {
+		if err := m.validateFullDescriptionFile(*modelReq.FullDescriptionFileId, userID); err != nil {
+			if m.respondFullDescriptionError(c, err) {
+				return
+			}
+		}
+
+		if err := m.modelApp.UpdateFullDescriptionFileID(savedModel.ID, modelReq.FullDescriptionFileId); err != nil {
+			c.JSON(http.StatusInternalServerError, fmt.Sprintf(constants.Failed, err))
+			return
+		}
+
+		savedModel.FullDescriptionFileID = modelReq.FullDescriptionFileId
 	}
 
 	c.JSON(http.StatusCreated, savedModel)
@@ -154,9 +173,10 @@ func (m *Model) UpdateModel(c *gin.Context) {
 	hasTitle := len(modelReq.Title) != 0
 	hasDescription := len(modelReq.Description) != 0
 	hasKeywords := len(modelReq.Keywords) != 0
+	hasFullDescription := modelReq.FullDescriptionFileId != nil
 
 	// Если все поля пустые, возвращаем модель без изменений
-	if !hasTitle && !hasDescription && !hasKeywords {
+	if !hasTitle && !hasDescription && !hasKeywords && !hasFullDescription {
 		c.JSON(http.StatusOK, updatableModel)
 		return
 	}
@@ -173,6 +193,36 @@ func (m *Model) UpdateModel(c *gin.Context) {
 	// Frontend всегда отправляет keywords в запросе при обновлении модели
 	if hasKeywords || hasTitle || hasDescription {
 		updatableModel.Keywords = modelReq.Keywords
+	}
+
+	if hasFullDescription {
+		if *modelReq.FullDescriptionFileId == 0 {
+			if err := m.removeFullDescriptionFile(updatableModel); err != nil {
+				c.JSON(http.StatusInternalServerError, fmt.Sprintf(constants.Failed, err))
+				return
+			}
+			updatableModel.FullDescriptionFileID = nil
+		} else {
+			if err := m.validateFullDescriptionFile(*modelReq.FullDescriptionFileId, userID); err != nil {
+				if m.respondFullDescriptionError(c, err) {
+					return
+				}
+			}
+
+			oldFileID := updatableModel.FullDescriptionFileID
+			if oldFileID != nil && *oldFileID != *modelReq.FullDescriptionFileId {
+				if err := m.removeFullDescriptionFile(updatableModel); err != nil {
+					c.JSON(http.StatusInternalServerError, fmt.Sprintf(constants.Failed, err))
+					return
+				}
+			}
+
+			if err := m.modelApp.UpdateFullDescriptionFileID(updatableModel.ID, modelReq.FullDescriptionFileId); err != nil {
+				c.JSON(http.StatusInternalServerError, fmt.Sprintf(constants.Failed, err))
+				return
+			}
+			updatableModel.FullDescriptionFileID = modelReq.FullDescriptionFileId
+		}
 	}
 
 	updatableModel.BeforeUpdate()
@@ -229,17 +279,13 @@ func (m *Model) GetModelList(c *gin.Context) {
 			return
 		}
 
-		files, err := m.modelApp.GetFilesByModel(model.ID)
+		modelData, err := m.buildModelData(model, user.PublicUser())
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, fmt.Sprintf(constants.Failed, err))
 			return
 		}
 
-		readyModels = append(readyModels, entities.ModelData{
-			Model: model,
-			User:  *user.PublicUser(),
-			Files: utils.SortFiles(files),
-		})
+		readyModels = append(readyModels, modelData)
 	}
 
 	c.JSON(http.StatusOK, readyModels)
@@ -272,17 +318,13 @@ func (m *Model) GetModel(c *gin.Context) {
 		return
 	}
 
-	files, err := m.modelApp.GetFilesByModel(modelId)
+	modelData, err := m.buildModelData(*model, user.PublicUser())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, fmt.Sprintf(constants.Failed, err))
 		return
 	}
 
-	c.JSON(http.StatusOK, &entities.ModelData{
-		Model: *model,
-		User:  *user.PublicUser(),
-		Files: utils.SortFiles(files),
-	})
+	c.JSON(http.StatusOK, &modelData)
 }
 
 //	@Summary	Delete model by ID
@@ -321,6 +363,11 @@ func (m *Model) DeleteModel(c *gin.Context) {
 
 	if !utils.AccessVerification(model.UserID, user, false) {
 		c.JSON(http.StatusUnauthorized, constants.NotEnoughRights)
+		return
+	}
+
+	if err := m.removeFullDescriptionFile(model); err != nil {
+		c.JSON(http.StatusInternalServerError, fmt.Sprintf(constants.Failed, err))
 		return
 	}
 

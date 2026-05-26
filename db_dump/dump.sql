@@ -65,6 +65,7 @@ CREATE TABLE public.model (
     user_id integer NOT NULL,
     title character varying NOT NULL,
     description text,
+    full_description_file_id integer,
     created_at timestamp without time zone,
     updated_at timestamp without time zone
 );
@@ -159,3 +160,6 @@ ALTER TABLE ONLY public.model_files
 
 ALTER TABLE ONLY public.model
     ADD CONSTRAINT model_user_id_fk FOREIGN KEY (user_id) REFERENCES public."user"(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.model
+    ADD CONSTRAINT model_full_description_file_id_fk FOREIGN KEY (full_description_file_id) REFERENCES public.file(id) ON DELETE SET NULL;

@@ -15,10 +15,15 @@
       </div>
       <div class="form__container form__container--one">
         <div class="form__input-container input --grey">
-          <label for="MODEL_DESCRIPTION" class="form__label">Новое описание модели:</label>
-          <CustomTextarea :model-value="description" @update:model-value="setDescription" class="form__input" id="MODEL_DESCRIPTION" name="MODEL_DESCRIPTION" placeholder="Новое описание модели"/>
+          <label for="MODEL_DESCRIPTION" class="form__label">Краткое описание модели:</label>
+          <CustomTextarea :model-value="description" @update:model-value="setDescription" class="form__input" id="MODEL_DESCRIPTION" name="MODEL_DESCRIPTION" placeholder="Введите краткое описание модели"/>
         </div>
       </div>
+      <UploadFullDescription
+        v-if="model"
+        :existing-file="model.full_description"
+        @onChange="onFullDescriptionChange"
+      />
       <div class="form__container form__container--one">
         <div class="form__input-container input --grey">
           <label for="MODEL_KEYWORDS" class="form__label">Ключевые слова:</label>
@@ -39,6 +44,7 @@
 import {mapState, mapGetters, mapMutations, mapActions} from 'vuex';
 import axios from "axios";
 import EditFiles from "@/components/EditFiles.vue";
+import UploadFullDescription from "@/components/UploadFullDescription.vue";
 import CustomInput from "@/components/UI/CustomInput";
 import CustomTextarea from "@/components/UI/CustomTextarea";
 
@@ -46,14 +52,17 @@ export default {
   components: {
     CustomInput,
     CustomTextarea,
-    EditFiles
+    EditFiles,
+    UploadFullDescription,
   },
   data(){
     return {
       model: null,
       isModelLoading: true,
       attachments: '',
-      files_id: []
+      files_id: [],
+      fullDescriptionFileId: undefined,
+      fullDescriptionTouched: false,
     }
   },
   methods: {
@@ -64,7 +73,11 @@ export default {
     }),
     onSaved (data) {
       this.files_id = data;
-    }, 
+    },
+    onFullDescriptionChange(data) {
+      this.fullDescriptionTouched = true;
+      this.fullDescriptionFileId = data.full_description_file_id;
+    },
     handleFilesUpload(){
       this.attachments = this.$refs.attachments.files;
     },
@@ -84,6 +97,10 @@ export default {
         description: description,
         title: title,
         keywords: keywords,
+      };
+
+      if (this.fullDescriptionTouched) {
+        data.full_description_file_id = this.fullDescriptionFileId || 0;
       }
 
       const submitFilesFunc = (model_id, access) => {
@@ -143,6 +160,7 @@ export default {
         this.$store.commit('upload/setName', this.model.model.title);
         this.$store.commit('upload/setDescription', this.model.model.description);
         this.$store.commit('upload/setKeywords', this.model.model.keywords || '');
+        this.fullDescriptionFileId = this.model.full_description?.id ?? null;
       })
       .catch(error => {
         console.log(error);

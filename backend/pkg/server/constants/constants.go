@@ -41,7 +41,8 @@ const (
 	//File errors
 	FileTitleCantBeEmpty = "title can't be empty"
 	FileURLError         = "something wrong with file path"
-	FileNotAvaliable     = "file not avaliable"
+	FileNotAvaliable                = "file not avaliable"
+	FullDescriptionFileFormatError  = "full description file must be .txt, .doc, .docx or .pdf"
 
 	//Security errors
 	PasswordHashError   = "error hashing password: %v"

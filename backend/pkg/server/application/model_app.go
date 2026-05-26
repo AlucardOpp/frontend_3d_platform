@@ -16,6 +16,7 @@ type ModelAppInterface interface {
 	GetAllModels(int, int, uint64, string) ([]entities.Model, error)
 	GetModel(uint64) (*entities.Model, error)
 	UpdateModel(*entities.Model) (*entities.Model, error)
+	UpdateFullDescriptionFileID(uint64, *uint64) error
 	DeleteModel(uint64) error
 
 	GetFilesByModel(uint64) ([]entities.File, error)
@@ -39,6 +40,10 @@ func (m *modelApp) GetModel(modelId uint64) (*entities.Model, error) {
 
 func (m *modelApp) UpdateModel(model *entities.Model) (*entities.Model, error) {
 	return m.md.UpdateModel(model)
+}
+
+func (m *modelApp) UpdateFullDescriptionFileID(modelID uint64, fileID *uint64) error {
+	return m.md.UpdateFullDescriptionFileID(modelID, fileID)
 }
 
 func (m *modelApp) DeleteModel(modelId uint64) error {

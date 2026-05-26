@@ -9,26 +9,29 @@ import (
 )
 
 type Model struct {
-	ID          uint64    `json:"id"`
-	UserID      uint64    `json:"user_id"`
-	Title       string    `json:"title"`
-	Description string    `json:"description"`
-	Keywords    string    `json:"keywords"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	ID                    uint64    `json:"id"`
+	UserID                uint64    `json:"user_id"`
+	Title                 string    `json:"title"`
+	Description           string    `json:"description"`
+	Keywords              string    `json:"keywords"`
+	FullDescriptionFileID *uint64   `json:"full_description_file_id,omitempty"`
+	CreatedAt             time.Time `json:"created_at"`
+	UpdatedAt             time.Time `json:"updated_at"`
 }
 
 type ModelRequest struct {
-	Title       string   `json:"title"`
-	Description string   `json:"description"`
-	Keywords    string   `json:"keywords"`
-	FilesId     []uint64 `json:"files_id"`
+	Title                 string   `json:"title"`
+	Description           string   `json:"description"`
+	Keywords              string   `json:"keywords"`
+	FilesId               []uint64 `json:"files_id"`
+	FullDescriptionFileId *uint64  `json:"full_description_file_id"`
 }
 
 type ModelData struct {
-	Model Model       `json:"model"`
-	User  PublicUser  `json:"author"`
-	Files SortedFiles `json:"files"`
+	Model           Model       `json:"model"`
+	User            PublicUser  `json:"author"`
+	Files           SortedFiles `json:"files"`
+	FullDescription *File       `json:"full_description,omitempty"`
 }
 
 func (modelReq *ModelRequest) NewModel() *Model {

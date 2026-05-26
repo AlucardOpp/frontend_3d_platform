@@ -53,6 +53,20 @@
     }
   }
 
+  &__full-description-link {
+    display: inline-block;
+    margin-bottom: 10px;
+    font-size: 14px;
+    line-height: 21px;
+    color: $color-navy-blue;
+    text-decoration: underline;
+    word-break: break-word;
+
+    &:hover {
+      text-decoration: none;
+    }
+  }
+
   &__author,
   &__data,
   &__keywords,
