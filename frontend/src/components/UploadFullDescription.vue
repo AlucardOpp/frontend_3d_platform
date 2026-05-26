@@ -213,8 +213,11 @@ export default {
 }
 
 .dropzone__section-title {
-  margin-bottom: 0.75rem;
-  font-weight: 600;
+  margin: 0 0 5px;
+  color: #1a1a1a;
+  display: block;
+  width: fit-content;
+  line-height: 24px;
 }
 
 .dropzone-container {

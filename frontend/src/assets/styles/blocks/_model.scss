@@ -47,6 +47,11 @@
     font-weight: 400;
     line-height: 21px;
     word-wrap: break-word;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 10;
+    line-clamp: 10;
+    overflow: hidden;
 
     &:not(:last-child) {
       margin-bottom: 10px;
